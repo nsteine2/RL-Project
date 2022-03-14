@@ -35,7 +35,7 @@ class FroggerEnv():
     Reward schedule:
     - Reach finish(F): 50
     - Reach car(H): -20
-    - Reach empty(N): -1
+    - Reach empty(F): -1
     
     ### Parameters
     - map: the current environement (agent not included)
@@ -43,7 +43,9 @@ class FroggerEnv():
     - n_map_states: the number of possible map states (periodic environment)
     - n_col: the number of horizontal tiles
     - n_row: the number of vertical tiles
+    - n_actions: the number of actions the agent can take
     - n_tiles: the number of possible positions the agent can occupy
+    - n_game_states: the number of possible game states (agent + environment)
     - frog_map: a 2D array containing unique position IDs [0:n_tiles-1]
     - frog_y: the current row position of the agent
     - frog_x: the current column position of the agent
@@ -55,7 +57,8 @@ class FroggerEnv():
     
     ### Version History
     * v0: Initial versions release (1.0.0)
-    * v1: drank wine, added pygame visualation option
+    * v1: drank wine, added pygame visualation  (1.1.0)
+    * v1: added more parameters to help with Q-table initialization (1.2.0)
     """
 
 
@@ -75,7 +78,9 @@ class FroggerEnv():
         self.n_map_states = 24
         self.n_col = 12
         self.n_row = 6
+        self.n_actions = 5
         self.n_tiles = self.n_col*self.n_row
+        self.n_game_states = self.n_map_states*self.n_tiles
         self.frog_map= np.arange(self.n_tiles).reshape(self.n_row,self.n_col)
         self.frog_y = self.n_row-1
         self.frog_x = np.int(np.round(11*np.random.rand()))
@@ -298,9 +303,3 @@ class FroggerEnv():
         self.__init__()
         
         
-
-env = FroggerEnv()
-while True:
-    state, reward, stop = env.step(np.round(4*np.random.rand()))
-    print(state, reward, stop)
-    time.sleep(0.2)
