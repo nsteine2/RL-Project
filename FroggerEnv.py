@@ -35,7 +35,7 @@ class FroggerEnv():
     Reward schedule:
     - Reach finish(F): 50
     - Reach car(H): -20
-    - Reach empty(F): -1
+    - Reach empty(N): -1
     
     ### Parameters
     - map: the current environement (agent not included)
