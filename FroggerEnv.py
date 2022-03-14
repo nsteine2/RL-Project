@@ -7,6 +7,8 @@ Created on Sun Mar 13 18:13:02 2022
 
 from io import StringIO
 import numpy as np
+import pygame
+import time
 
 class FroggerEnv():
     """
@@ -53,6 +55,7 @@ class FroggerEnv():
     
     ### Version History
     * v0: Initial versions release (1.0.0)
+    * v1: drank wine, added pygame visualation option
     """
 
 
@@ -77,6 +80,18 @@ class FroggerEnv():
         self.frog_y = self.n_row-1
         self.frog_x = np.int(np.round(11*np.random.rand()))
         
+        
+        self.WIDTH = 20
+        self.HEIGHT = 20
+        self.MARGIN = 5
+        self.C_CAR = (255,0,0)
+        self.C_FROG = (0,255,0)
+        self.C_NONE = (0,0,0)
+        self.C_WIN = (255,255,255)
+        self.C_COLLISION = (255,255,0)
+        self.INITIALIZED = False
+
+        
     def update_car_map(self):
         """
         Updates the list of strings which represent the position of the cars 
@@ -94,25 +109,75 @@ class FroggerEnv():
             self.map[3] = self.map[3][-1] + self.map[3][0:-1]
         self.map[4] = self.map[4][1:] + self.map[4][0]
         
-    def display_env(self):
+    def init_pygame_window(self):
+        pygame.init()
+        window_size = [300, 150]
+        self.scr = pygame.display.set_mode(window_size)
+        pygame.display.set_caption("Frogger")
+        self.INITIALIZED = True
+        
+    def display_env(self, style):
         """
         Displays the current state of the environment (agent included) in plain
         text in the output window. Eventually we should use the pygame
         library for a richer visualization.
         
+        Parameters
+        ----------
+        style - 'text': displays using plain text
+                'pygame': displays using pygame window
+
         Returns
         -------
         None
         """
-        outline = StringIO()
-        current_map = self.map.copy()
-        temp = list(current_map[self.frog_y])
-        temp[self.frog_x] = '@'
-        current_map[self.frog_y] = ''.join(temp)       
-        for rr in range(self.n_row):    
-            outline.write(current_map[rr][0:self.n_col] + '\n')
-        print(outline.getvalue())
-    
+        if style == 'text':
+            outline = StringIO()
+            current_map = self.map.copy()
+            temp = list(current_map[self.frog_y])
+            temp[self.frog_x] = '@'
+            current_map[self.frog_y] = ''.join(temp)       
+            for rr in range(self.n_row):    
+                outline.write(current_map[rr][0:self.n_col] + '\n')
+            print(outline.getvalue())
+            
+        if style == 'pygame':
+            if self.INITIALIZED==False:
+                self.init_pygame_window()
+                
+            for rr in range(self.n_row):
+                for cc in range(self.n_col):
+                    color = (255, 0, 0)
+                    if self.map[rr][cc] == 'C':
+                        pygame.draw.rect(self.scr,
+                             self.C_CAR,
+                             [(self.MARGIN + self.WIDTH) * cc + self.MARGIN,
+                              (self.MARGIN + self.HEIGHT) * rr + self.MARGIN,
+                              self.WIDTH,
+                              self.HEIGHT])
+                    if self.map[rr][cc] == 'N' or self.map[rr][cc] =='F':
+                        pygame.draw.rect(self.scr,
+                             self.C_NONE,
+                             [(self.MARGIN + self.WIDTH) * cc + self.MARGIN,
+                              (self.MARGIN + self.HEIGHT) * rr + self.MARGIN,
+                              self.WIDTH,
+                              self.HEIGHT])
+            if self.map[self.frog_y][self.frog_x] == 'N':
+                color = self.C_FROG
+            if self.map[self.frog_y][self.frog_x] == 'F':
+                color = self.C_WIN
+            if self.map[self.frog_y][self.frog_x] == 'C':
+                color = self.C_COLLISION
+            pygame.draw.rect(self.scr,
+                 color,
+                 [(self.MARGIN + self.WIDTH) * self.frog_x + self.MARGIN,
+                  (self.MARGIN + self.HEIGHT) * self.frog_y + self.MARGIN,
+                  self.WIDTH,
+                  self.HEIGHT])
+            pygame.display.update()
+        
+            
+            
     def update_frog_position(self,action):
         '''
         This updates the position of the froggy based on the input action 
@@ -215,7 +280,7 @@ class FroggerEnv():
         """
         self.update_car_map()
         self.update_frog_position(action)
-        self.display_env()
+        self.display_env('pygame')
         self.map_state = np.mod(self.map_state+1, self.n_map_states)
         state = self.calculate_game_state()
         reward, stop_game = self.calculate_rewards()
@@ -232,3 +297,10 @@ class FroggerEnv():
         """
         self.__init__()
         
+        
+
+env = FroggerEnv()
+while True:
+    state, reward, stop = env.step(np.round(4*np.random.rand()))
+    print(state, reward, stop)
+    time.sleep(0.2)
